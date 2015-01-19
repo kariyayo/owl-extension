@@ -1,0 +1,10 @@
+@charset "utf-8";
+
+div#owl { margin: 20px 0; border: 1px solid #e7e7e7; }
+div#owl p { margin: 0; padding: 5px; background-color: #f6f6f6; }
+ul.owl_ul { margin: 10px; font-weght: 700; }
+li.owl_li { list-style-type: none; margin: 10px 0px; padding: 5px 0px 5px 0px; border-bottom: 1px dotted #e7e7e7; }
+li.owl_li a:link { color: #4eb691; }
+li.owl_li a:visited { color: #4eb691; }
+li.owl_li a:hover { color: #428bca; }
+li.owl_li a:active { color: #428bca; }
