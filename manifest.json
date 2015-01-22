@@ -13,6 +13,7 @@
   ],
   "background": {"page":"background.html"},
   "permissions": [
+    "notifications",
     "http://owl.example.com/"
   ]
 }
