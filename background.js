@@ -1,5 +1,3 @@
-window.onload = init;
-
 function init() {
   chrome.extension.onRequest.addListener( function ( message , sender , sendResponse) {
     if (message.action === "search") {
@@ -8,13 +6,24 @@ function init() {
       }).done(function(response) {
         sendResponse({value: response});
       });
-    } else if (message.action === "notification") {
-      croll(message.url, message.username);
+    } else if (message.action === "clear") {
+      localStorage["owlextention_commenttimes"] = null;
+      console.log("Clear!!");
     }
   }) ;
 }
 
-function croll(urlBase, username) {
+function crollInit(interval) {
+  if (timerId) {
+    clearInterval(timerId);
+  }
+  timerId = setInterval(croll, interval);
+}
+
+function croll() {
+  var urlBase = config.owlUrl;
+  var username = localStorage["owlextension_username"];
+  if (!username) return;
   $.ajax({
     url: urlBase + "/" + username
   }).then(function(response) {
@@ -26,10 +35,13 @@ function croll(urlBase, username) {
   }).then(function(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9){
     var rs = [r0, r1, r2, r3, r4, r5, r6, r7, r8, r9];
     var arr = JSON.parse(localStorage["owlextention_commenttimes"]) || [];
+    var newUrls = [];
     console.log(arr);
     for(var i = 0; i < 10; i++) {
       if (rs[i] && rs[i][1] === "success") {
-        var $lastCommentDate = $(rs[i][0]).find("#comment-container .media-body .right div:first-child").last();
+        var $doc = $(rs[i][0]);
+        var $pageTitle = $doc.find(".item-title");
+        var $lastCommentDate = $doc.find("#comment-container .media-body .right div:first-child").last();
         if ($lastCommentDate.length > 0) {
           var savedTime = getCommentTime(arr, this[i].url);
           var lastCommentTime = Date.parse($lastCommentDate.html());
@@ -38,7 +50,10 @@ function croll(urlBase, username) {
               "url" : this[i].url,
               "commentTime" : lastCommentTime
             });
-            showNotification(urlBase);
+            newUrls.push({
+              "url" : this[i].url,
+              "pageTitle": $pageTitle.html()
+            });
           }
         }
       }
@@ -47,6 +62,7 @@ function croll(urlBase, username) {
       arr.splice(0, 1);
     }
     localStorage["owlextention_commenttimes"] = JSON.stringify(arr);
+    if (newUrls.length > 0) showPopup();
   });
 }
 
@@ -68,10 +84,22 @@ function showNotification(urlBase) {
         type: "basic",
         title: "hoge",
         message: message.join(''),
-        iconUrl: urlBase + "/img/owl_logo_mini.png",
+        iconUrl: "owl_logo_mini.png",
         eventTime: Date.now() + displayPeriod
       }, function(){});
     }
   });
 }
+
+function showPopup() {
+  chrome.browserAction.setBadgeText({ text: "New" });
+  chrome.browserAction.onClicked.addListener(function(tab){
+    chrome.browserAction.setBadgeText({ text: "" });
+  });
+}
+
+window.onload = init;
+var timerId;
+var intervalTime = localStorage["owlextension_interval_msec"] || 1800000; // 30min
+crollInit(intervalTime);
 
